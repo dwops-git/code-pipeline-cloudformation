@@ -1,4 +1,4 @@
-# code pipeline cloudformation
+## code pipeline cloudformation
 
 This repo is configured with Github Action that will trigger as soon as there will be a Pull Request. Githu Actions will create an AWS Code Pipeline (thas has AWS Code Build step) using Cloudformation template present in the repo (pipline-stack.yaml).
 
