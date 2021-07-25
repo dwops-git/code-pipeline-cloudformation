@@ -23,4 +23,4 @@ jobs:
         with:
           name: pipline-stack
           template: pipline-stack.yaml
-          parameter-overrides: "CodePipelineName=demo-pipline,S3BucketName=cpipline-test,LogBucketName=codepipeline-us-east-1-360078336,GithubRepo=code-pipeline-cloudformation,GithubBranch=main,GithubToken=dwops-git,MyParam2=${{ secrets.REPO_ACCESS_TOKEN }},"
+          parameter-overrides: "CodePipelineName=demo-pipline,S3BucketName=cpipline-test,LogBucketName=codepipeline-us-east-1-360078336,GithubRepo=code-pipeline-cloudformation,GithubBranch=main,GithubToken=dwops-git,MyParam2=${{ secrets.REPO_ACCESS_TOKEN }}"
