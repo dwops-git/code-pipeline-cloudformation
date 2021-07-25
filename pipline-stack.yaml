@@ -3,31 +3,31 @@ Parameters:
   CodePipelineName:
     Description: Enter a name for Code Piepline.
     Type: String
-    Default: "demo-pipline"
+    #Default: "demo-pipline"
   S3BucketName:
     Description: Enter a S3 bucket name to store artifacts.
     Type: String
-    Default: "cpipline-test"
+    #Default: "cpipline-test"
   LogBucketName:
     Description: Enter a S3 bucket name to store artifacts.
     Type: String
-    Default: "codepipeline-us-east-1-360078336"
+    #Default: "codepipeline-us-east-1-360078336"
   GithubRepo:
     Description: Enter Github repository name.
     Type: String
-    Default: "code-pipeline-cloudformation"
+    #Default: "code-pipeline-cloudformation"
   GithubBranch:
     Description: Enter branch name of the repository.
     Type: String
-    Default: "main"
+    #Default: "main"
   GithubOwner:
     Description: Enter Github Owner's name.
     Type: String
-    Default: "dwops-git"
+    #Default: "dwops-git"
   GithubToken:
     Description: Enter Github Access Token.
     Type: String
-    Default: "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"
+    #Default: "****"
 Metadata:
     Generator: "former2"
 Description: "An AWS Code Pipeline"
