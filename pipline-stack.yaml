@@ -1,15 +1,46 @@
 AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  CodePipelineName:
+    Description: Enter a name for Code Piepline.
+    Type: String
+    Default: "demo-pipline"
+  S3BucketName:
+    Description: Enter a S3 bucket name to store artifacts.
+    Type: String
+    Default: "cpipline-test"
+  LogBucketName:
+    Description: Enter a S3 bucket name to store artifacts.
+    Type: String
+    Default: "codepipeline-us-east-1-360078336"
+  GithubRepo:
+    Description: Enter Github repository name.
+    Type: String
+    Default: "code-pipeline-cloudformation"
+  GithubBranch:
+    Description: Enter branch name of the repository.
+    Type: String
+    Default: "main"
+  GithubOwner:
+    Description: Enter Github Owner's name.
+    Type: String
+    Default: "dwops-git"
+  GithubToken:
+    Description: Enter Github Access Token.
+    Type: String
+    Default: "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"
 Metadata:
     Generator: "former2"
-Description: "hello"
+Description: "An AWS Code Pipeline"
 Resources:
     CodePipelinePipeline:
         Type: "AWS::CodePipeline::Pipeline"
         Properties:
-            Name: "aws-trigger21"
-            RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/service-role/AWSCodePipelineServiceRole-${AWS::Region}-aws-trigger21"
+            Name: !Ref CodePipelineName
+            RoleArn: !GetAtt 
+              - CodePipelineServiceRole
+              - Arn 
             ArtifactStore: 
-                Location: !Sub "codepipeline-${AWS::Region}-360078336288"
+                Location: !Ref S3BucketName
                 Type: "S3"
             Stages: 
               - 
@@ -23,11 +54,11 @@ Resources:
                         Provider: "GitHub"
                         Version: "1"
                     Configuration: 
-                        Branch: "main"
-                        OAuthToken: "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"
-                        Owner: "baldevpal123"
+                        Branch: !Ref GithubBranch
+                        OAuthToken: !Ref GithubToken
+                        Owner: !Ref GithubOwner
                         PollForSourceChanges: "false"
-                        Repo: "example"
+                        Repo: !Ref GithubRepo
                     OutputArtifacts: 
                       - 
                         Name: "SourceArtifact"
@@ -45,7 +76,7 @@ Resources:
                         Provider: "CodeBuild"
                         Version: "1"
                     Configuration: 
-                        ProjectName: "aws-trigger"
+                        ProjectName: !Ref Buildphase
                     InputArtifacts: 
                       - 
                         Name: "SourceArtifact"
@@ -55,4 +86,123 @@ Resources:
                     Region: !Ref AWS::Region
                     Namespace: "BuildVariables"
                     RunOrder: 1
-
+    LogBucket:
+        Type: 'AWS::S3::Bucket'
+        Properties: {}
+        Metadata:
+          'AWS::CloudFormation::Designer':
+            id: b4492d67-e60f-4977-9cf6-398afa0a2cdc
+    Buildphase:
+        Type: 'AWS::CodeBuild::Project'
+        Properties:
+          Description: Run Task
+          ServiceRole: !GetAtt 
+            - CodeBuildRole
+            - Arn
+          Artifacts:
+            Type: CODEPIPELINE
+          Environment:
+            Type: LINUX_CONTAINER
+            ComputeType: BUILD_GENERAL1_SMALL
+            Image: 'aws/codebuild/amazonlinux2-x86_64-standard:3.0'
+          Source:
+            Type: CODEPIPELINE
+          LogsConfig:
+            CloudWatchLogs:
+              Status: ENABLED
+            S3Logs:
+              Location: !Ref LogBucketName #!GetAtt 
+              #  - LogBucket
+              #  - Arn
+              Status: ENABLED
+          TimeoutInMinutes: 120                
+    CodePipelineServiceRole:
+        Type: 'AWS::IAM::Role'
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                    - codepipeline.amazonaws.com
+                Action: 'sts:AssumeRole'
+          Path: /
+          Policies:
+            - PolicyName: AWS-CodePipeline-Service-3
+              PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                  - Effect: Allow
+                    Action:
+                      - 'codecommit:CancelUploadArchive'
+                      - 'codecommit:GetBranch'
+                      - 'codecommit:GetCommit'
+                      - 'codecommit:GetUploadArchiveStatus'
+                      - 'codecommit:UploadArchive'
+                    Resource: '*'
+                  - Effect: Allow
+                    Action:
+                      - 'codedeploy:CreateDeployment'
+                      - 'codedeploy:GetApplicationRevision'
+                      - 'codedeploy:GetDeployment'
+                      - 'codedeploy:GetDeploymentConfig'
+                      - 'codedeploy:RegisterApplicationRevision'
+                    Resource: '*'
+                  - Effect: Allow
+                    Action:
+                      - 'codebuild:BatchGetBuilds'
+                      - 'codebuild:StartBuild'
+                    Resource: '*'
+                  - Effect: Allow
+                    Action:
+                      - 'devicefarm:ListProjects'
+                      - 'devicefarm:ListDevicePools'
+                      - 'devicefarm:GetRun'
+                      - 'devicefarm:GetUpload'
+                      - 'devicefarm:CreateUpload'
+                      - 'devicefarm:ScheduleRun'
+                    Resource: '*'
+                  - Effect: Allow
+                    Action:
+                      - 'lambda:InvokeFunction'
+                      - 'lambda:ListFunctions'
+                    Resource: '*'
+                  - Effect: Allow
+                    Action:
+                      - 'iam:PassRole'
+                    Resource: '*'
+                  - Effect: Allow
+                    Action:
+                      - 'elasticbeanstalk:*'
+                      - 'ec2:*'
+                      - 'elasticloadbalancing:*'
+                      - 'autoscaling:*'
+                      - 'cloudwatch:*'
+                      - 's3:*'
+                      - 'sns:*'
+                      - 'cloudformation:*'
+                      - 'rds:*'
+                      - 'sqs:*'
+                      - 'ecs:*'
+                    Resource: '*'
+    CodeBuildRole:
+        Type: 'AWS::IAM::Role'
+        Properties:
+          AssumeRolePolicyDocument:
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                    - codebuild.amazonaws.com
+                Action:
+                  - 'sts:AssumeRole'
+          Path: /
+          Policies:
+            - PolicyName: root
+              PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                  - Effect: Allow
+                    Action: '*'
+                    Resource: '*'
